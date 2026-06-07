@@ -8,6 +8,7 @@ pub struct MerkleTree{
     next_index: usize
 }
 
+#[derive(PartialEq)]
 enum Side{
     Left,
     Right
@@ -15,6 +16,7 @@ enum Side{
 
 struct MerkleProof {
     pub siblings: Vec<(Fr,Side)>, // (hash, side)
+    leaf: Fr
 }
 
 
@@ -39,10 +41,10 @@ impl MerkleTree{
         self.nodes[0][index] = leaf;
 
         let mut parent_index = index / 2;
-        for i in 1..=self.depth {
-            self.nodes[i][parent_index] = hash::hash_left_right(
-                self.nodes[i - 1][parent_index * 2],
-                self.nodes[i - 1][parent_index * 2 + 1],
+        for level in 1..=self.depth {
+            self.nodes[level][parent_index] = hash::hash_left_right(
+                self.nodes[level - 1][parent_index * 2],
+                self.nodes[level - 1][parent_index * 2 + 1],
             );
             parent_index /= 2;
         }
@@ -53,6 +55,30 @@ impl MerkleTree{
 
     pub fn root(&self) -> Fr {
         self.nodes[self.depth][0]
+    }
+
+    pub fn generate_proof(&self, index: usize) -> MerkleProof {
+        let leaf = self.nodes[0][index];
+        let mut siblings = Vec::new();
+        let mut current = index;
+        for level in 0..self.depth {
+            let side = if current % 2 == 0 { Side::Left } else { Side::Right };
+            let sibling_index = current ^ 1; // XOR if even->current+1, if odd->current-1
+            siblings.push((self.nodes[level][sibling_index], side));
+            current /= 2;
+        }
+        MerkleProof { siblings, leaf }
+    }
+
+    pub fn verify_proof(root: Fr, proof: &MerkleProof) -> bool {
+        let mut current = proof.leaf;
+        for (sibling, side) in &proof.siblings {
+            current = match side {
+                Side::Left  => hash::hash_left_right(current, *sibling),
+                Side::Right => hash::hash_left_right(*sibling, current),
+            };
+        }
+        current == root
     }
 }
 
