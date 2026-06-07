@@ -1,5 +1,7 @@
 # zk-mixer
 
+> Educational project only: built to learn the math behind ZK protocols and how to implement zero-knowledge proofs in Rust. Not intended for production use.
+
 ## Architecture
 
 ```
