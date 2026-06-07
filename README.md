@@ -1,6 +1,8 @@
 # zk-mixer
 
-> Educational project only: built to learn the math behind ZK protocols and how to implement zero-knowledge proofs in Rust. Not intended for production use.
+A ground-up reimplementation of Tornado Cash built purely for learning. The goal is to understand how privacy protocols work under the hood (ZK circuits, Merkle inclusion proofs, Groth16), and how they compose into a working mixer by building each piece in Rust from scratch using arkworks.
+
+> **Academic use only.** Not audited, not production-ready. Built to learn ZK, nothing more.
 
 ## Architecture
 
