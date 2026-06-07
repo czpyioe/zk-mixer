@@ -27,12 +27,32 @@ impl MerkleTree{
             zero_values.push(hash::hash_left_right(z, z));
         }
 
-
         let nodes = (0..=depth)
             .map(|level| vec![zero_values[level]; 1 << (depth - level)])
             .collect();
 
         MerkleTree { depth, nodes, next_index: 0 }
+    }
+
+    pub fn insert(&mut self, leaf: Fr) -> usize {
+        let index = self.next_index;
+        self.nodes[0][index] = leaf;
+
+        let mut parent_index = index / 2;
+        for i in 1..=self.depth {
+            self.nodes[i][parent_index] = hash::hash_left_right(
+                self.nodes[i - 1][parent_index * 2],
+                self.nodes[i - 1][parent_index * 2 + 1],
+            );
+            parent_index /= 2;
+        }
+
+        self.next_index += 1;
+        index
+    }
+
+    pub fn root(&self) -> Fr {
+        self.nodes[self.depth][0]
     }
 }
 
@@ -48,5 +68,45 @@ mod tests {
         assert_eq!(tree.nodes[4].len(), 1);
         assert_eq!(tree.nodes[0][0], expected_leaf);
         assert_eq!(tree.next_index, 0);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut tree = MerkleTree::new(4);
+        let root_before = tree.root();
+
+        let idx = tree.insert(Fr::from(5));
+
+        assert_eq!(idx, 0);
+        assert_eq!(tree.next_index, 1);
+        assert_eq!(tree.nodes[0][0], Fr::from(5));
+        assert_ne!(tree.root(), root_before);
+    }
+
+    #[test]
+    fn test_two_inserts() {
+        let mut tree = MerkleTree::new(4);
+
+        let idx0 = tree.insert(Fr::from(1));
+        let idx1 = tree.insert(Fr::from(2));
+
+        assert_eq!(idx0, 0);
+        assert_eq!(idx1, 1);
+        assert_eq!(tree.nodes[0][0], Fr::from(1));
+        assert_eq!(tree.nodes[0][1], Fr::from(2));
+        let expected_parent = hash::hash_left_right(Fr::from(1), Fr::from(2));
+        assert_eq!(tree.nodes[1][0], expected_parent);
+    }
+
+
+    #[test]
+    fn test_root_empty() {
+        let tree = MerkleTree::new(4);
+        let z0 = hash::hash_left_right(Fr::zero(), Fr::zero());
+        let z1 = hash::hash_left_right(z0, z0);
+        let z2 = hash::hash_left_right(z1, z1);
+        let z3 = hash::hash_left_right(z2, z2);
+        let expected_root = hash::hash_left_right(z3, z3);
+        assert_eq!(tree.root(), expected_root);
     }
 }
