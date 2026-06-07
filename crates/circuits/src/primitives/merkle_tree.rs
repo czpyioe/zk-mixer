@@ -14,9 +14,9 @@ enum Side{
     Right
 }
 
-struct MerkleProof {
+pub struct MerkleProof {
     pub siblings: Vec<(Fr,Side)>, // (hash, side)
-    leaf: Fr
+    pub leaf: Fr
 }
 
 
@@ -70,7 +70,7 @@ impl MerkleTree{
         MerkleProof { siblings, leaf }
     }
 
-    pub fn verify_proof(root: Fr, proof: &MerkleProof) -> bool {
+    pub fn verify_proof(&self, proof: &MerkleProof) -> bool {
         let mut current = proof.leaf;
         for (sibling, side) in &proof.siblings {
             current = match side {
@@ -78,7 +78,7 @@ impl MerkleTree{
                 Side::Right => hash::hash_left_right(*sibling, current),
             };
         }
-        current == root
+        current == self.root()
     }
 }
 
@@ -134,5 +134,49 @@ mod tests {
         let z3 = hash::hash_left_right(z2, z2);
         let expected_root = hash::hash_left_right(z3, z3);
         assert_eq!(tree.root(), expected_root);
+    }
+
+    #[test]
+    fn test_generate_and_verify_proof() {
+        let mut tree = MerkleTree::new(4);
+        let z = Fr::zero();
+        let leaf = hash::hash_left_right(z, hash::hash_left_right(z, z));
+        let idx = tree.insert(leaf);
+
+        let proof = tree.generate_proof(idx);
+
+        assert!(tree.verify_proof(&proof));
+    }
+
+    #[test]
+    fn test_verify_proof_wrong_proof() {
+        let mut tree = MerkleTree::new(4);
+        let z = Fr::zero();
+        let leaf = hash::hash_left_right(z, hash::hash_left_right(z, z));
+        tree.insert(leaf);
+
+        let other_leaf = hash::hash_left_right(z, z);
+        let mut other_tree = MerkleTree::new(4);
+        let other_idx = other_tree.insert(other_leaf);
+        let wrong_proof = other_tree.generate_proof(other_idx);
+
+        assert!(!tree.verify_proof(&wrong_proof));
+    }
+
+    #[test]
+    fn test_proof_after_multiple_inserts() {
+        let mut tree = MerkleTree::new(4);
+        let z = Fr::zero();
+        let leaf0 = hash::hash_left_right(z, z);
+        let leaf1 = hash::hash_left_right(leaf0, z);
+        let leaf2 = hash::hash_left_right(z, leaf0);
+
+        let idx0 = tree.insert(leaf0);
+        let idx1 = tree.insert(leaf1);
+        let idx2 = tree.insert(leaf2);
+
+        assert!(tree.verify_proof(&tree.generate_proof(idx0)));
+        assert!(tree.verify_proof(&tree.generate_proof(idx1)));
+        assert!(tree.verify_proof(&tree.generate_proof(idx2)));
     }
 }
