@@ -24,6 +24,12 @@ pub fn poseidon_config() -> PoseidonConfig<Fr> {
     }
 }
 
+pub fn hash_left_right(left: Fr, right: Fr) -> Fr {
+    let cfg = poseidon_config();
+    CRH::<Fr>::evaluate(&cfg, vec![left, right]).unwrap()
+}
+
+
 pub fn compute_nullifier_hash(nullifier: Fr) -> Fr {
     let cfg = poseidon_config();
     let crh_nullifier = CRH::<Fr>::evaluate(&cfg, vec![nullifier]).unwrap();
@@ -48,6 +54,13 @@ mod tests {
         let s = Fr::from(42);
         let n = Fr::from(99);
         assert_eq!(compute_commitment(s, n), compute_commitment(s, n));
+    }
+
+    #[test]
+    fn test_hash_left_right_deterministic() {
+        let l = Fr::from(42);
+        let r = Fr::from(99);
+        assert_eq!(hash_left_right(l, r), hash_left_right(l, r));
     }
 
     #[test]
