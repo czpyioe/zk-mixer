@@ -54,3 +54,81 @@ impl ConstraintSynthesizer<Fr> for ZkMixer {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_relations::r1cs::ConstraintSystem;
+    use crate::primitives::hash::{compute_commitment, compute_nullifier_hash};
+    use crate::primitives::merkle_tree::{MerkleTree, Side};
+
+    fn build_valid_circuit(secret: Fr, nullifier: Fr) -> ZkMixer {
+        let commitment = compute_commitment(secret, nullifier);
+        let nullifier_hash = compute_nullifier_hash(nullifier);
+
+        let mut tree = MerkleTree::new(4);
+        let idx = tree.insert(commitment);
+        let proof = tree.generate_proof(idx);
+
+        ZkMixer {
+            secret: Some(secret),
+            nullifier: Some(nullifier),
+            merkle_siblings: Some(proof.siblings.iter().map(|(sib, _)| *sib).collect()),
+            merkle_siblings_sides: Some(proof.siblings.iter().map(|(_, side)| *side == Side::Right).collect()),
+            merkle_root: Some(tree.root()),
+            nullifier_hash: Some(nullifier_hash),
+            recipient_address: Some(Fr::from(0xabc123u64)),
+        }
+    }
+
+    #[test]
+    fn test_circuit_satisfiable() {
+        let circuit = build_valid_circuit(Fr::from(1), Fr::from(2));
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn test_circuit_wrong_nullifier_hash() {
+        let mut circuit = build_valid_circuit(Fr::from(1), Fr::from(2));
+        // wrong nullifier hash
+        circuit.nullifier_hash = Some(Fr::from(0));
+
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(!cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn test_circuit_wrong_secret() {
+        let mut circuit = build_valid_circuit(Fr::from(1), Fr::from(2));
+        // wrong secret: leaf computed in circuit won't match commitment in tree
+        circuit.secret = Some(Fr::from(99));
+
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(!cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn test_circuit_wrong_nullifier() {
+        let mut circuit = build_valid_circuit(Fr::from(1), Fr::from(2));
+        // wrong nullifier: breaks both constraint 1 (nullifier_hash) and the leaf
+        circuit.nullifier = Some(Fr::from(99));
+
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(!cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn test_circuit_wrong_merkle_root() {
+        let mut circuit = build_valid_circuit(Fr::from(1), Fr::from(2));
+        circuit.merkle_root = Some(Fr::from(0));
+
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(!cs.is_satisfied().unwrap());
+    }
+}
