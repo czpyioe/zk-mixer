@@ -9,7 +9,7 @@ pub struct MerkleTree{
 }
 
 #[derive(PartialEq)]
-enum Side{
+pub enum Side{
     Left,
     Right
 }
