@@ -3,6 +3,11 @@ use ark_bn254::Fr;
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar, boolean::Boolean, eq::EqGadget};
 use crate::gadgets::poseidon;
 use crate::gadgets::merkle;
+use ark_ff::Zero;
+
+
+pub const TREE_DEPTH: usize = 20;
+
 
 #[derive(Clone)]
 pub struct ZkMixer {
@@ -16,6 +21,21 @@ pub struct ZkMixer {
     pub merkle_root: Option<Fr>,
     pub nullifier_hash: Option<Fr>,
     pub recipient_address: Option<Fr>,
+}
+
+
+impl Default for ZkMixer {
+    fn default() -> Self {
+        ZkMixer { 
+            secret: Some(Fr::zero()), 
+            nullifier: Some(Fr::zero()), 
+            merkle_siblings: Some(vec![Fr::zero(); TREE_DEPTH]), 
+            merkle_siblings_sides: Some(vec![false; TREE_DEPTH]), 
+            merkle_root: Some(Fr::zero()), 
+            nullifier_hash: Some(Fr::zero()), 
+            recipient_address: Some(Fr::zero())
+        }
+    }
 }
 
 impl ConstraintSynthesizer<Fr> for ZkMixer {
