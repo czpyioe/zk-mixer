@@ -1,15 +1,17 @@
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_bn254::Fr;
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar, boolean::Boolean, eq::EqGadget};
+use ark_ff::Zero;
+
 use crate::gadgets::poseidon;
 use crate::gadgets::merkle;
-use ark_ff::Zero;
+
 
 
 pub const TREE_DEPTH: usize = 20;
 
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct ZkMixer {
     // private vars (witness)
     pub secret: Option<Fr>,
