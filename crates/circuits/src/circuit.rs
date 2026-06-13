@@ -1,10 +1,17 @@
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_bn254::Fr;
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar, boolean::Boolean, eq::EqGadget};
+use ark_ff::Zero;
+
 use crate::gadgets::poseidon;
 use crate::gadgets::merkle;
 
-#[derive(Clone)]
+
+
+pub const TREE_DEPTH: usize = 20;
+
+
+#[derive(Clone,Debug)]
 pub struct ZkMixer {
     // private vars (witness)
     pub secret: Option<Fr>,
@@ -16,6 +23,21 @@ pub struct ZkMixer {
     pub merkle_root: Option<Fr>,
     pub nullifier_hash: Option<Fr>,
     pub recipient_address: Option<Fr>,
+}
+
+
+impl Default for ZkMixer {
+    fn default() -> Self {
+        ZkMixer { 
+            secret: Some(Fr::zero()), 
+            nullifier: Some(Fr::zero()), 
+            merkle_siblings: Some(vec![Fr::zero(); TREE_DEPTH]), 
+            merkle_siblings_sides: Some(vec![false; TREE_DEPTH]), 
+            merkle_root: Some(Fr::zero()), 
+            nullifier_hash: Some(Fr::zero()), 
+            recipient_address: Some(Fr::zero())
+        }
+    }
 }
 
 impl ConstraintSynthesizer<Fr> for ZkMixer {
