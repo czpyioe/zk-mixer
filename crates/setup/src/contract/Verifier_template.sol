@@ -153,7 +153,7 @@ contract Verifier {
     vk.beta2  = Pairing.G2Point([uint256({{BETA2_X0}}), uint256({{BETA2_X1}})], [uint256({{BETA2_Y0}}), uint256({{BETA2_Y1}})]);
     vk.gamma2 = Pairing.G2Point([uint256({{GAMMA2_X0}}), uint256({{GAMMA2_X1}})], [uint256({{GAMMA2_Y0}}), uint256({{GAMMA2_Y1}})]);
     vk.delta2 = Pairing.G2Point([uint256({{DELTA2_X0}}), uint256({{DELTA2_X1}})], [uint256({{DELTA2_Y0}}), uint256({{DELTA2_Y1}})]);
-    {{IC_ENTRIES}}
+{{IC_ENTRIES}}
   }
 
   /*
