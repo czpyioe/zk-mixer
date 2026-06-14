@@ -3,8 +3,8 @@ pub mod types;
 pub mod keys;
 
 use ark_bn254::Fr;
-use ark_ff::{BigInteger, PrimeField};
 use wasm_bindgen::prelude::*;
+use rand::rngs::OsRng;
 
 // return a JSON: { proof, publicInputs }
 #[wasm_bindgen]
@@ -52,9 +52,19 @@ pub fn prove(
         },
     });
     Ok(JsValue::from_str(&json.to_string()))
-
 }
 
+#[wasm_bindgen]
+pub fn generate_note() -> Result<JsValue, JsValue> {
+    let note = types::SecretNote::generate(&mut OsRng);
+
+    let json = serde_json::json!({
+        "secret": format!("0x{}", hex::encode(types::fq_to_be_bytes(note.secret))),
+        "nullifier": format!("0x{}", hex::encode(types::fq_to_be_bytes(note.nullifier))),
+        "commitment": format!("0x{}", hex::encode(types::fq_to_be_bytes(note.commitment()))),
+    });
+    Ok(JsValue::from_str(&json.to_string()))
+}
 
 
 
