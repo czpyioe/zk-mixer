@@ -6,39 +6,53 @@ use ark_bn254::Fr;
 use wasm_bindgen::prelude::*;
 use rand::rngs::OsRng;
 
-// return a JSON: { proof, publicInputs }
+use circuits::circuit::TREE_DEPTH;
+use circuits::primitives::merkle_tree::{MerkleTree, Side};
+
+/// build the Merkle tree from every on-chain commitment
+/// returns { proof, publicInputs } as JSON
 #[wasm_bindgen]
 pub fn prove(
     secret_hex: &str,
     nullifier_hex: &str,
-    root_hex: &str,
-    siblings_json: &str, // JSON array of hex strings, leaf -> root
-    path_indices_json: &str, // JSON array of bools, true = sibling on the right
-    recipient: &str
+    leaves_json: &str, // JSON array of every commitment (hex), in insertion order
+    recipient: &str,
 ) -> Result<JsValue, JsValue> {
-    let secret = types::hex_to_fr(secret_hex);
-    let nullifier = types::hex_to_fr(nullifier_hex);
     let secret_note = types::SecretNote {
-        secret: secret,
-        nullifier: nullifier
+        secret: types::hex_to_fr(secret_hex),
+        nullifier: types::hex_to_fr(nullifier_hex),
+    };
+    let recipient_address = types::hex_to_fr(recipient);
+
+    // rebuild the tree from the deposit commitments
+    let leaf_hexes: Vec<String> = serde_json::from_str(leaves_json)
+        .map_err(|e| JsValue::from_str(&format!("invalid leaves_json: {e}")))?;
+    let leaves: Vec<Fr> = leaf_hexes.iter().map(|s| types::hex_to_fr(s)).collect();
+    let mut tree = MerkleTree::new(TREE_DEPTH);
+    for leaf in &leaves {
+        tree.insert(*leaf);
+    }
+
+    // search commitment among the leaves
+    let commitment = secret_note.commitment();
+    let index = leaves
+        .iter()
+        .position(|leaf| *leaf == commitment)
+        .ok_or_else(|| JsValue::from_str("commitment not found in leaves"))?;
+
+    let merkle_proof = tree.generate_proof(index);
+    let inputs = types::ProofInputs {
+        secret_note,
+        root: tree.root(),
+        merkle_siblings: merkle_proof.siblings.iter().map(|(sib, _)| *sib).collect(),
+        merkle_siblings_side: merkle_proof
+            .siblings
+            .iter()
+            .map(|(_, side)| *side == Side::Right)
+            .collect(),
+        recepient_address: recipient_address,
     };
 
-    let root = types::hex_to_fr(root_hex);
-    let recepient_address = types::hex_to_fr(recipient);
-
-    let sibling_hexes: Vec<String> = serde_json::from_str(siblings_json)
-        .map_err(|e| JsValue::from_str(&format!("invalid siblings_json: {e}")))?;
-    let merkle_siblings: Vec<Fr> = sibling_hexes.iter().map(|s| types::hex_to_fr(s)).collect();
-    let merkle_siblings_side: Vec<bool> = serde_json::from_str(path_indices_json)
-        .map_err(|e| JsValue::from_str(&format!("invalid path_indices_json: {e}")))?;
-
-    let inputs = types::ProofInputs{
-        secret_note: secret_note,
-        root: root,
-        merkle_siblings: merkle_siblings,
-        merkle_siblings_side: merkle_siblings_side,
-        recepient_address: recepient_address
-    };
     let pk = keys::load_proving_key();
     let (proof, public_inputs) = prove::generate_proof(inputs, &pk)
         .map_err(|e| JsValue::from_str(&format!("proving failed: {e}")))?;
