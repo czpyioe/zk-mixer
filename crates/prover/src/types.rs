@@ -93,7 +93,6 @@ impl Proof {
     /// _proof.A = Pairing.G1Point(p[0], p[1]);
     /// _proof.B = Pairing.G2Point([p[2], p[3]], [p[4], p[5]]);
     /// _proof.C = Pairing.G1Point(p[6], p[7]);
-
     pub fn to_solidity_call_data(&self) -> Vec<u8> {
         let mut data = Vec::with_capacity(8 * 32);
 

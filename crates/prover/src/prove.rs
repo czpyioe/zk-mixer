@@ -23,7 +23,7 @@ pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Res
         recipient_address: Some(inputs.recepient_address)
     };
 
-    let proof = Groth16::<Bn254>::prove(&pk, witness, &mut rng)?;
+    let proof = Groth16::<Bn254>::prove(pk, witness, &mut rng)?;
 
     let proof = types::Proof { 
         a: proof.a, 
