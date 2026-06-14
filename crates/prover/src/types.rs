@@ -10,6 +10,24 @@ pub struct SecretNote {
 }
 
 
+pub struct PublicInputs {
+    pub merkle_root: Fr,
+    pub nullifier_hash: Fr,
+    pub recipient_address: Fr,
+}
+
+
+impl PublicInputs {
+    pub fn to_vec(&self) -> Vec<Fr> {
+        vec![
+            self.merkle_root,
+            self.nullifier_hash,
+            self.recipient_address,
+        ]
+    }
+}
+
+
 impl SecretNote {
     pub fn generate(rng: &mut impl Rng) -> Self {
         SecretNote {

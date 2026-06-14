@@ -1,5 +1,4 @@
 use ark_bn254::Bn254;
-use ark_bn254::Fr;
 use ark_groth16::ProvingKey;
 use circuits::circuit::ZkMixer;
 use ark_groth16::Groth16;
@@ -11,7 +10,7 @@ use anyhow::Result;
 use crate::types;
 
 
-pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Result<(types::Proof, Vec<Fr>)> {
+pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Result<(types::Proof, types::PublicInputs)> {
     let mut rng = OsRng;
 
     let witness = ZkMixer { 
@@ -32,5 +31,11 @@ pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Res
         c: proof.c 
     };
 
-    Ok((proof,vec![inputs.root, inputs.secret_note.nullifier_hash(), inputs.recepient_address]))
+    let public_inputs = types::PublicInputs{
+        merkle_root: inputs.root,
+        nullifier_hash: inputs.secret_note.nullifier_hash(),
+        recipient_address: inputs.recepient_address
+    };
+
+    Ok((proof,public_inputs))
 }

@@ -1,6 +1,6 @@
 pub mod prove;
 pub mod types;
-
+pub mod keys;
 
 #[cfg(test)]
 mod tests {
@@ -54,7 +54,7 @@ mod tests {
             b: proof.b,
             c: proof.c,
         };
-        assert!(Groth16::<Bn254>::verify(&vk, &public_inputs, &ark_proof).unwrap());
+        assert!(Groth16::<Bn254>::verify(&vk, &public_inputs.to_vec(), &ark_proof).unwrap());
 
     }
 }
