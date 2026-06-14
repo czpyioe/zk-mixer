@@ -34,11 +34,3 @@ pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Res
 
     Ok((proof,vec![inputs.root, inputs.secret_note.nullifier_hash(), inputs.recepient_address]))
 }
-
-
-
-
-
-
-
-
