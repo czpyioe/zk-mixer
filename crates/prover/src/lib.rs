@@ -16,19 +16,19 @@ pub fn prove(
     path_indices_json: &str, // JSON array of bools, true = sibling on the right
     recipient: &str
 ) -> Result<JsValue, JsValue> {
-    let secret = hex_to_fr(secret_hex);
-    let nullifier = hex_to_fr(nullifier_hex);
+    let secret = types::hex_to_fr(secret_hex);
+    let nullifier = types::hex_to_fr(nullifier_hex);
     let secret_note = types::SecretNote {
         secret: secret,
         nullifier: nullifier
     };
 
-    let root = hex_to_fr(root_hex);
-    let recepient_address = hex_to_fr(recipient);
+    let root = types::hex_to_fr(root_hex);
+    let recepient_address = types::hex_to_fr(recipient);
 
     let sibling_hexes: Vec<String> = serde_json::from_str(siblings_json)
         .map_err(|e| JsValue::from_str(&format!("invalid siblings_json: {e}")))?;
-    let merkle_siblings: Vec<Fr> = sibling_hexes.iter().map(|s| hex_to_fr(s)).collect();
+    let merkle_siblings: Vec<Fr> = sibling_hexes.iter().map(|s| types::hex_to_fr(s)).collect();
     let merkle_siblings_side: Vec<bool> = serde_json::from_str(path_indices_json)
         .map_err(|e| JsValue::from_str(&format!("invalid path_indices_json: {e}")))?;
 
@@ -56,12 +56,6 @@ pub fn prove(
 }
 
 
-fn hex_to_fr(s: &str) -> Fr {
-    let s = s.strip_prefix("0x").unwrap_or(s);
-    let bytes = hex::decode(s).expect("invalid hex");
-    // from_be_bytes_mod_order also accepts the 20-byte recipient address.
-    Fr::from_be_bytes_mod_order(&bytes)
-}
 
 
 #[cfg(test)]

@@ -119,3 +119,11 @@ pub fn fq_to_be_bytes<F: PrimeField>(value: F) -> [u8; 32] {
     out[32 - bytes.len()..].copy_from_slice(&bytes);
     out
 }
+
+
+pub fn hex_to_fr(s: &str) -> Fr {
+    let s = s.strip_prefix("0x").unwrap_or(s);
+    let bytes = hex::decode(s).expect("invalid hex");
+    // from_be_bytes_mod_order also accepts the 20-byte recipient address.
+    Fr::from_be_bytes_mod_order(&bytes)
+}
