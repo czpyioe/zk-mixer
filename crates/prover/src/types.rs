@@ -113,7 +113,7 @@ impl Proof {
 }
 
 /// Convert a field element into its 32-byte big-endian (uint256) representation.
-fn fq_to_be_bytes<F: PrimeField>(value: F) -> [u8; 32] {
+pub fn fq_to_be_bytes<F: PrimeField>(value: F) -> [u8; 32] {
     let bytes = value.into_bigint().to_bytes_be();
     let mut out = [0u8; 32];
     out[32 - bytes.len()..].copy_from_slice(&bytes);
