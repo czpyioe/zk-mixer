@@ -32,3 +32,4 @@ zk-mixer/
 - [How Tornado Cash Works](https://rareskills.io/post/how-does-tornado-cash-work)
 - [Tornado Cash Manual](https://zk.bearblog.dev/tornado-cash-manual/)
 - [Arkworks R1CS Tutorial](https://github.com/arkworks-rs/r1cs-tutorial/)
+- [Wasm Rust](https://wasm-bindgen.github.io/wasm-pack/book/introduction.html)
