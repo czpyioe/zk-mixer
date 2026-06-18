@@ -1,7 +1,7 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0;
 
-library PoseidonT3 {
+library Poseidon {
   uint constant M00 = 0x109b7f411ba0e4c9b2b70caf5c36a7b194be7c11ad24378bfedb68592ba8118b;
   uint constant M01 = 0x2969f27eed31a480b9c36c764379dbca2cc8fdd1415c3dded62940bcde0bd771;
   uint constant M02 = 0x143021ec686a3f330d5f9e654638065ce6cd79e28c5b3753326244ee65a1b1a7;
@@ -9,18 +9,24 @@ library PoseidonT3 {
   uint constant M11 = 0x2e2419f9ec02ec394c9871c832963dc1b89d743c8c7b964029b2311687b1fe23;
   uint constant M12 = 0x176cc029695ad02582a70eff08a6fd99d057e12e58e7d7b6b16cdfabc8ee2911;
 
-  // See here for a simplified implementation: https://github.com/vimwitch/poseidon-solidity/blob/e57becdabb65d99fdc586fe1e1e09e7108202d53/contracts/Poseidon.sol#L40
-  // Inspired by: https://github.com/iden3/circomlibjs/blob/v0.0.8/src/poseidon_slow.js
-  function hash(uint[2] memory) public pure returns (uint) {
+  function hashLeftRight(uint left, uint right) internal pure returns (uint) {
+    return _hash(left, right);
+  }
+
+  function hashSingle(uint input) internal pure returns (uint) {
+    return _hash(input, 0);
+  }
+
+  function _hash(uint in0, uint in1) private pure returns (uint result) {
     assembly {
       let F := 21888242871839275222246405745257275088548364400416034343698204186575808495617
       let M20 := 0x2b90bba00fca0589f617e7dcbfe82e0df706ab640ceb247b791a93b74e36736d
       let M21 := 0x101071f0032379b697315876690f053d148d4e109f5fb065c8aacc55a0f89bfa
       let M22 := 0x19a3fc0a56702bf417ba7fee3802593fa644470307043f7773279cd71d25d5e0
 
-      // load the inputs from memory
-      let state1 := add(mod(mload(0x80), F), 0x00f1445235f2148c5986587169fc1bcd887b08d4d00868df5696fff40956e864)
-      let state2 := add(mod(mload(0xa0), F), 0x08dff3487e8ac99e1f29a058d0fa80b930c728730b7ab36ce879f3890ecf73f5)
+      // load the inputs (state = [0, in0, in1]; first ARK constant folded in)
+      let state1 := add(mod(in0, F), 0x00f1445235f2148c5986587169fc1bcd887b08d4d00868df5696fff40956e864)
+      let state2 := add(mod(in1, F), 0x08dff3487e8ac99e1f29a058d0fa80b930c728730b7ab36ce879f3890ecf73f5)
       let scratch0 := mulmod(state1, state1, F)
       state1 := mulmod(mulmod(scratch0, scratch0, F), state1, F)
       scratch0 := mulmod(state2, state2, F)
@@ -383,9 +389,7 @@ library PoseidonT3 {
       scratch0 := mulmod(state2, state2, F)
       state2 := mulmod(mulmod(scratch0, scratch0, F), state2, F)
 
-      mstore(0x0, mod(add(add(mulmod(state0, M00, F), mulmod(state1, M10, F)), mulmod(state2, M20, F)), F))
-
-      return(0, 0x20)
+      result := mod(add(add(mulmod(state0, M01, F), mulmod(state1, M11, F)), mulmod(state2, M21, F)), F)
     }
   }
 }
