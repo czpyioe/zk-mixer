@@ -79,7 +79,7 @@ contract MerkleTree {
         return nextIndex;
     }
 
-    function wasRoot(bytes32 root) public view returns (bool){
+    function IsOrWasRoot(bytes32 root) public view returns (bool){
         return roots[root];
     }
 }
