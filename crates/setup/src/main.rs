@@ -56,7 +56,7 @@ fn generate_verifier_contract(vk:VerifyingKey<Bn254>) -> Result<String> {
         .enumerate()
         .map(|(i, v)| {
             format!(
-                "    vk.IC[{}] = Pairing.G1Point(uint256({}), uint256({}));\n",
+                "        vk.IC[{}] = Pairing.G1Point(uint256({}), uint256({}));\n",
                 i,
                 v.x.to_string(),
                 v.y.to_string()
