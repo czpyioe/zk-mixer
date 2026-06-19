@@ -1,20 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import {Poseidon} from "./PoseidonT3.sol";
+
 
 contract MerkleTree {
     mapping(bytes32=>bool) roots;
     uint8 constant DEPTH = 21;
 
-    uint256 nextIndex = 0;
+    uint32 nextIndex = 0;
     bytes32[DEPTH] currentPath;
 
+    constructor() {
+        for(uint8 i = 0; i < DEPTH; i++) {
+            currentPath[i] = zeros(i);
+        }
+    }
 
 
+    function _insert(bytes32 commitment) internal returns (uint32) {
+        require(nextIndex != uint32(2)**DEPTH, "tree full");
+        uint32 leafIndex = nextIndex;
+        uint32 currentIndex = leafIndex;
+        nextIndex ++;
+        bytes32 currentHash = commitment;
+        bytes32 left;
+        bytes32 right;
+        for (uint8 i = 0; i < DEPTH; i++) {
+            // if current index is on the left
+            if (currentIndex%2==0){
+                left = currentHash;
+                right = zeros(i);
+                currentPath[i] = currentHash;
+            }
+            // if current index is on the right
+            else {
+                left = currentPath[i];
+                right = currentHash;
+            }
+            currentHash = bytes32(Poseidon.hashLeftRight(uint256(left), uint256(right)));
 
+            currentIndex /= 2;
+        }
 
-    function _insert(bytes32 commitment) internal returns (uint256) {
+        roots[currentHash] = true;
 
+        return leafIndex;
     }
 
 
@@ -41,6 +72,7 @@ contract MerkleTree {
         else if (i == 18) return bytes32(0x2fd372a756b96d3a01a6e4851f7146194bf133eb40003b623fb8772b7e15c9fb);
         else if (i == 19) return bytes32(0x1c118d46c460daf599f7e9baa998784a4bbaf68c660cefc485f22d6991fd1fa8);
         else if (i == 20) return bytes32(0x0ea614eb8a8052d533b9a351d661ba06f77bcce13b8fedbfc7ef04a8fa2b3f6f);
+        else revert();
     }
 
     function getNextIndex() public view returns (uint256) {
