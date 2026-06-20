@@ -4,8 +4,7 @@ use ark_ff::{BigInteger, PrimeField, Zero};
 
 fn main() {
     let mut previous = Fr::zero();
-    println!("i==0:  0x{}", to_hex(previous));
-    for i in 1..=20 {
+    for i in 0..=20 {
         let current = hash::hash_left_right(previous, previous);
         println!("i=={}: 0x{}", i, to_hex(current));
         previous = current;
