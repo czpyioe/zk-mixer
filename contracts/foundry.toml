@@ -8,4 +8,7 @@ libs = ["lib"]
 
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
-anvil = "127.0.0.1:8545"
+anvil = "http://127.0.0.1:8545"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}", chain = "sepolia" }
