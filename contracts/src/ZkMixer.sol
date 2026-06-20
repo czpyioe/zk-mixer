@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import {MerkleTree} from "./MerkleTree.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 interface IVerifier {
     function verifyProof(bytes memory _proof, uint256[3] memory _input) external view returns (bool);
 }
 
 
-contract ZkMixer is MerkleTree {
+contract ZkMixer is MerkleTree, ReentrancyGuard {
     uint256 public constant DENOMINATION = 0.01 ether;
 
     mapping(bytes32 => bool) nullifierHashes;
@@ -24,7 +25,7 @@ contract ZkMixer is MerkleTree {
         verifier = _verifier;
     }
 
-    function deposit(bytes32 commitment) external payable {
+    function deposit(bytes32 commitment) external payable nonReentrant {
         require(!commitments[commitment], "commitment already submitted");
         require(msg.value == DENOMINATION, "msg.value different from the contract denomination");
 
@@ -40,7 +41,7 @@ contract ZkMixer is MerkleTree {
         bytes32 root,
         bytes32 nullifierHash,
         address recipientAddress
-    ) external {
+    ) external nonReentrant {
         require(recipientAddress != address(0), "invalid recipient");
         require(!nullifierHashes[nullifierHash], "nullifier hash already used");
         require(IsOrWasRoot(root), "unknown root");
