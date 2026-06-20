@@ -9,11 +9,11 @@ library Poseidon {
   uint constant M11 = 0x2e2419f9ec02ec394c9871c832963dc1b89d743c8c7b964029b2311687b1fe23;
   uint constant M12 = 0x176cc029695ad02582a70eff08a6fd99d057e12e58e7d7b6b16cdfabc8ee2911;
 
-  function hashLeftRight(uint left, uint right) internal pure returns (uint) {
+  function hashLeftRight(uint left, uint right) public pure returns (uint) {
     return _hash(left, right);
   }
 
-  function hashSingle(uint input) internal pure returns (uint) {
+  function hashSingle(uint input) public pure returns (uint) {
     return _hash(input, 0);
   }
 
