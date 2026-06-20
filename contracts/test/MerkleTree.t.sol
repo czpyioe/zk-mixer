@@ -42,7 +42,7 @@ contract MerkleTreeTest is Test {
         tree.insert(commitment);
 
         bytes32 expected = commitment;
-        for (uint8 i = 0; i < 21; i++) {
+        for (uint8 i = 0; i < 20; i++) {
             expected = bytes32(Poseidon.hashLeftRight(uint256(expected), uint256(tree.getZero(i))));
         }
 
@@ -57,7 +57,7 @@ contract MerkleTreeTest is Test {
         tree.insert(c2);
 
         bytes32 expected = bytes32(Poseidon.hashLeftRight(uint256(c1), uint256(c2)));
-        for (uint8 i = 1; i < 21; i++) {
+        for (uint8 i = 1; i < 20; i++) {
             expected = bytes32(Poseidon.hashLeftRight(uint256(expected), uint256(tree.getZero(i))));
         }
 
@@ -71,7 +71,7 @@ contract MerkleTreeTest is Test {
         tree.insert(c1);
 
         bytes32 root1 = c1;
-        for (uint8 i = 0; i < 21; i++) {
+        for (uint8 i = 0; i < 20; i++) {
             root1 = bytes32(Poseidon.hashLeftRight(uint256(root1), uint256(tree.getZero(i))));
         }
 
