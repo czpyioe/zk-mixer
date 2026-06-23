@@ -33,19 +33,40 @@ open(path, "w").write("\n".join(lines) + "\n")
 EOF
 }
 
-echo "==> [1/6] Trusted setup (proving/verification keys + Verifier.sol)..."
+echo "==> [1/7] Trusted setup (proving/verification keys + Verifier.sol)..."
 ( cd crates && cargo run -p setup --release )
 
-echo "==> [2/6] Copying generated Verifier.sol into contracts/src..."
+echo "==> [2/7] Copying generated Verifier.sol into contracts/src..."
 cp crates/setup/src/contract/generated/Verifier.sol contracts/src/Verifier.sol
 
-echo "==> [3/6] Rebuilding the wasm prover into the frontend (proving key changed)..."
+echo "==> [3/7] Regenerating hardcoded proof fixtures in the contract tests..."
+FIXTURES="$( cd crates && cargo run -q -p prover --bin test_proof --release )" \
+  python3 - contracts/test/ZkMixer.t.sol <<'EOF'
+import re, sys, os
+sol_path = sys.argv[1]
+vals = {}
+for line in os.environ["FIXTURES"].splitlines():
+    if "=" in line:
+        k, _, v = line.partition("=")
+        vals[k.strip()] = v.strip()
+if "commitment" not in vals:
+    sys.exit(f"could not parse test_proof output; got keys: {list(vals)}")
+src = open(sol_path).read()
+src = re.sub(r'COMMITMENT = bytes32\(0x[0-9a-fA-F]+\)',     f'COMMITMENT = bytes32({vals["commitment"]})', src)
+src = re.sub(r'NULLIFIER_HASH = bytes32\(0x[0-9a-fA-F]+\)', f'NULLIFIER_HASH = bytes32({vals["nullifierHash"]})', src)
+src = re.sub(r'ROOT = bytes32\(0x[0-9a-fA-F]+\)',           f'ROOT = bytes32({vals["root"]})', src)
+src = re.sub(r'PROOF = hex"[0-9a-fA-F]*"',                  f'PROOF = hex"{vals["proof"][2:]}"', src)
+open(sol_path, "w").write(src)
+print(f"    commitment = {vals['commitment']}")
+EOF
+
+echo "==> [4/7] Rebuilding the wasm prover into the frontend (proving key changed)..."
 wasm-pack build crates/prover --target web --out-dir "$ROOT/frontend/src/wasm"
 
-echo "==> [4/6] Deploying contracts to Sepolia..."
+echo "==> [5/7] Deploying contracts to Sepolia..."
 ./contracts/deploy-sepolia.sh
 
-echo "==> [5/6] Updating .env (contract address + deploy block)..."
+echo "==> [6/7] Updating .env (contract address + deploy block)..."
 read -r ZKMIXER_ADDR DEPLOY_BLOCK < <(python3 - "$BROADCAST" <<'EOF'
 import json, sys
 d = json.load(open(sys.argv[1]))
@@ -65,7 +86,7 @@ update_env VITE_DEPLOY_BLOCK        "$DEPLOY_BLOCK"
 echo "    ZkMixer = $ZKMIXER_ADDR"
 echo "    block   = $DEPLOY_BLOCK"
 
-echo "==> [6/6] Building and starting containers..."
+echo "==> [7/7] Building and starting containers..."
 set -a; source .env; set +a
 docker compose up -d --build
 
