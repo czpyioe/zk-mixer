@@ -20,7 +20,7 @@ zk-mixer
 ```
 
 
-**Flow.** Deposit: the browser generates a secret note (secret + nullifier), sends the commitment on-chain. The commitment is the Poseidon Hash for the nullifier and the secret. Withdraw: the browser generates the proof using the wasm (private and public inputs needed). Then the proof is sent to the relayer service in order to break completly the link between the deposit address and the withdraw address. In order to withdraw, gas is needed to broadcast the tx, so without the relayer, the user should fund his withdraw address and creates a link with his existing addresses.
+**Flow.** Deposit: the browser generates a secret note (secret + nullifier), sends the commitment on-chain. The commitment is the Poseidon Hash of the nullifier and the secret. Withdraw: the browser generates the proof using the wasm (private and public inputs needed). Then the proof is sent to the relayer service in order to break completly the link between the deposit address and the withdraw address. In order to withdraw, gas is needed to broadcast the tx, so without the relayer, the user should fund his withdraw address and creates a link with his existing addresses.
 
 ## Quick start
 
@@ -28,6 +28,14 @@ zk-mixer
 cp .env.example .env
 ./deploy-e2e.sh
 ```
+
+## Stack
+
+- **ZK / circuits**: Rust, [arkworks](https://arkworks.rs/) (Groth16 over BN254, Poseidon hash), compiled to WebAssembly via [wasm-pack](https://github.com/rustwasm/wasm-pack) / wasm-bindgen.
+- **Contracts**: Solidity, [Foundry](https://book.getfoundry.sh/) (forge), deployed on Sepolia.
+- **Frontend**: React + Vite + TypeScript, [viem](https://viem.sh/) for chain interaction.
+- **Relayer**: Rust, [Axum](https://github.com/tokio-rs/axum) + [Tokio](https://tokio.rs/), [Alloy](https://alloy.rs/) for signing/broadcasting.
+- **Infra**: Docker / Docker Compose.
 
 ## Status & limitations
 
