@@ -8,7 +8,8 @@ function ensureReady() {
 
 export type Note = {
     secret: string;
-    commitment: string
+    nullifier: string;
+    commitment: string;
 }
 
 export async function generateNote(): Promise<Note> {

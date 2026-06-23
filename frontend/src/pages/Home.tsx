@@ -1,67 +1,162 @@
-export default function Home() {
+import { useState } from "react";
+import type { Hash } from "viem";
+import { deposit } from "../handlers/deposit";
+import { withdraw } from "../handlers/withdraw";
+import type { Note } from "../lib/prover";
+
+function etherscanTx(hash: Hash) {
+  return `https://sepolia.etherscan.io/tx/${hash}`;
+}
+
+function TxLink({ hash }: { hash: Hash }) {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+    <a
+      href={etherscanTx(hash)}
+      target="_blank"
+      rel="noreferrer"
+      className="font-mono text-xs text-emerald-400 hover:text-emerald-300 underline break-all"
+    >
+      {hash}
+    </a>
+  );
+}
+
+export default function Home() {
+  // deposit state
+  const [depositing, setDepositing] = useState(false);
+  const [note, setNote] = useState<Note | null>(null);
+  const [depositHash, setDepositHash] = useState<Hash | null>(null);
+
+  // withdraw state
+  const [recipient, setRecipient] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawHash, setWithdrawHash] = useState<Hash | null>(null);
+
+  const [error, setError] = useState<string | null>(null);
+
+  async function onDeposit() {
+    setError(null);
+    setDepositHash(null);
+    setDepositing(true);
+    try {
+      const result = await deposit();
+      setNote(result.note);
+      setDepositHash(result.hash);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDepositing(false);
+    }
+  }
+
+  async function onWithdraw() {
+    setError(null);
+    setWithdrawHash(null);
+    if (!/^0x[0-9a-fA-F]{40}$/.test(recipient)) {
+      setError("Enter a valid recipient address (0x… 40 hex chars).");
+      return;
+    }
+    setWithdrawing(true);
+    try {
+      const hash = await withdraw(recipient as `0x${string}`);
+      setWithdrawHash(hash);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center px-6 py-12">
+      <header className="w-full max-w-xl flex items-center justify-between mb-10">
         <span className="font-mono font-bold text-lg tracking-tight">zk-mixer</span>
-        <span className="text-xs text-zinc-500 font-mono">BN254 · Groth16 · Poseidon</span>
+        <span className="text-xs text-zinc-500 font-mono">Sepolia · 0.01 ETH</span>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 gap-12">
-        <div className="flex flex-col items-center gap-4 text-center max-w-lg">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-zinc-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-              />
-            </svg>
+      <main className="w-full max-w-xl flex flex-col gap-6">
+        {error && (
+          <div className="rounded-lg border border-red-900 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+            {error}
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">zk-mixer</h1>
-          <p className="text-zinc-400 text-base leading-relaxed">
-            Private ETH transfers using zero-knowledge proofs.
-            Deposit, break the on-chain link, withdraw anonymously.
-          </p>
-        </div>
+        )}
 
-        <div className="flex gap-4">
-          <button
-            className="px-8 py-3 rounded-xl bg-zinc-100 text-zinc-900 font-semibold text-sm hover:bg-white transition-colors cursor-not-allowed opacity-60"
-            disabled
-          >
-            Deposit
-          </button>
-          <button
-            className="px-8 py-3 rounded-xl border border-zinc-700 text-zinc-300 font-semibold text-sm hover:border-zinc-500 hover:text-zinc-100 transition-colors cursor-not-allowed opacity-60"
-            disabled
-          >
-            Withdraw
-          </button>
-        </div>
+        {/* DEPOSIT */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Deposit</h2>
+            <p className="text-sm text-zinc-400">
+              Generate a secret note and lock 0.01 ETH into the mixer.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-3 gap-px bg-zinc-800 rounded-2xl overflow-hidden max-w-lg w-full">
-          {[
-            { label: 'Denomination', value: '0.1 ETH' },
-            { label: 'Anonymity set', value: '2²⁰ leaves' },
-            { label: 'Proof system', value: 'Groth16' },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-zinc-950 px-5 py-4 flex flex-col gap-1">
-              <span className="text-xs text-zinc-500 font-mono">{label}</span>
-              <span className="text-sm font-semibold text-zinc-200">{value}</span>
+          <button
+            onClick={onDeposit}
+            disabled={depositing}
+            className="self-start px-6 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 font-semibold text-sm hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {depositing ? "Depositing…" : "Deposit 0.01 ETH"}
+          </button>
+
+          {note && (
+            <div className="rounded-lg border border-amber-900 bg-amber-950/40 p-4 flex flex-col gap-2">
+              <p className="text-xs font-semibold text-amber-300">
+                Save this note — it's the only way to withdraw. Lose it, lose the funds.
+              </p>
+              <pre className="text-[11px] font-mono text-amber-100/90 whitespace-pre-wrap break-all">
+                {JSON.stringify(note, null, 2)}
+              </pre>
             </div>
-          ))}
-        </div>
+          )}
+
+          {depositHash && (
+            <div className="text-sm text-zinc-400">
+              Tx: <TxLink hash={depositHash} />
+            </div>
+          )}
+        </section>
+
+        {/* WITHDRAW */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Withdraw</h2>
+            <p className="text-sm text-zinc-400">
+              Prove ownership of your saved note and send 0.01 ETH to any address.
+            </p>
+          </div>
+
+          <input
+            value={recipient}
+            onChange={(e) => setRecipient(e.target.value.trim())}
+            placeholder="Recipient address (0x…)"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
+          />
+
+          <button
+            onClick={onWithdraw}
+            disabled={withdrawing}
+            className="self-start px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-200 font-semibold text-sm hover:border-zinc-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {withdrawing ? "Proving & withdrawing…" : "Withdraw"}
+          </button>
+
+          {withdrawing && (
+            <p className="text-xs text-zinc-500">
+              Generating the zero-knowledge proof — this freezes the tab for a few seconds.
+            </p>
+          )}
+
+          {withdrawHash && (
+            <div className="text-sm text-zinc-400">
+              Tx: <TxLink hash={withdrawHash} />
+            </div>
+          )}
+        </section>
       </main>
 
-      <footer className="border-t border-zinc-800 px-6 py-4 text-center">
-        <span className="text-xs text-zinc-600 font-mono">work in progress</span>
+      <footer className="mt-10 text-xs text-zinc-600 font-mono">
+        BN254 · Groth16 · Poseidon
       </footer>
     </div>
-  )
+  );
 }

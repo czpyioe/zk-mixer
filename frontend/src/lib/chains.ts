@@ -2,9 +2,9 @@ import { createPublicClient, createWalletClient, custom, http, parseAbi } from "
 import { sepolia } from "viem/chains";
 
 
-export const publicClient = createPublicClient({ 
-    chain: sepolia, 
-    transport: http() 
+export const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(import.meta.env.VITE_SEPOLIA_RPC_URL)
 });
 
 
@@ -16,6 +16,9 @@ export const walletClient = createWalletClient({
 
 
 export const MIXER_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+
+
+export const DEPLOY_BLOCK = import.meta.env.VITE_DEPLOY_BLOCK;
 
 export const mixerAbi = parseAbi([
     "function deposit(bytes32 commitment) payable",
