@@ -11,7 +11,7 @@ export type Note = {
     commitment: string
 }
 
-export async function generateNone(): Promise<Note> {
+export async function generateNote(): Promise<Note> {
     await ensureReady();
     return JSON.parse(generate_note());
 }
