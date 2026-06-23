@@ -33,3 +33,7 @@ zk-mixer/
 - [Tornado Cash Manual](https://zk.bearblog.dev/tornado-cash-manual/)
 - [Arkworks R1CS Tutorial](https://github.com/arkworks-rs/r1cs-tutorial/)
 - [Wasm Rust](https://wasm-bindgen.github.io/wasm-pack/book/introduction.html)
+- [Veim](https://viem.sh/)
+- [Axum Rust](https://www.rustfinity.com/blog/axum-rust-tutorial)
+- [Tokio Rust](https://tokio.rs/)
+- [Alloy Rust](https://alloy.rs/)
