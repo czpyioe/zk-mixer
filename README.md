@@ -4,6 +4,9 @@ A ground-up reimplementation of Tornado Cash built purely for learning. The goal
 
 > **Academic use only.** Not audited, not production-ready. Built to learn ZK, nothing more.
 
+![image](docs/img/homepage.png)
+
+
 ## Architecture
 
 ```
@@ -48,7 +51,7 @@ This project exists to **understand how a ZK mixer works end to end** (circuit, 
 
 ## References
 
-- [Arkworks — Rust ZK toolkit](https://arkworks.rs/)
+- [Arkworks: Rust ZK toolkit](https://arkworks.rs/)
 - [R1CS and QAP](https://risencrypto.github.io/R1CSQAP/)
 - [Groth16 Explained](https://risencrypto.github.io/Groth16/)
 - [Zero-Knowledge Proofs: Arkworks Usage Guide](https://www.byont.io/blog/zero-knowledge-proof-arkworks-usage-guide)
