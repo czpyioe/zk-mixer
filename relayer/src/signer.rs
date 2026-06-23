@@ -17,11 +17,11 @@ sol! {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WithdrawRequest {
     pub proof: Bytes,
     pub root: B256,
-    #[serde(alias = "nullifier_hash")]
-    pub nullifier_hash: B256,
+    pub nullifier_hash: B256, // accepts JSON key "nullifierHash"
     pub recipient: Address,
 }
 

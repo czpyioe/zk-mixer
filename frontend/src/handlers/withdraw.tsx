@@ -54,6 +54,12 @@ async function fetchCommitments(): Promise<string[]> {
 }
 
 export async function withdraw(recipient: `0x${string}`): Promise<Hash> {
+    if (!RELAYER_ADDRESS || !RELAYER_URL) {
+        throw new Error(
+            "Relayer not configured: set VITE_RELAYER_ADDRESS and VITE_RELAYER_URL, then restart the dev server (or rebuild the frontend).",
+        );
+    }
+
     const raw = localStorage.getItem("note");
     if (!raw) throw new Error("No saved note found — make a deposit first.");
     const note: Note = JSON.parse(raw);
