@@ -5,7 +5,7 @@ import {MerkleTree} from "./MerkleTree.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 interface IVerifier {
-    function verifyProof(bytes memory _proof, uint256[3] memory _input) external view returns (bool);
+    function verifyProof(bytes memory _proof, uint256[4] memory _input) external view returns (bool);
 }
 
 
@@ -46,7 +46,15 @@ contract ZkMixer is MerkleTree, ReentrancyGuard {
         require(!nullifierHashes[nullifierHash], "nullifier hash already used");
         require(IsOrWasRoot(root), "unknown root");
         require(
-            verifier.verifyProof(proof, [uint256(root), uint256(nullifierHash), uint256(uint160(recipientAddress))]),
+            verifier.verifyProof(
+                proof,
+                [
+                    uint256(root),
+                    uint256(nullifierHash),
+                    uint256(uint160(recipientAddress)),
+                    uint256(uint160(msg.sender))
+                ]
+            ),
             "invalid proof"
         );
 

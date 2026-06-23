@@ -14,6 +14,7 @@ pub struct PublicInputs {
     pub merkle_root: Fr,
     pub nullifier_hash: Fr,
     pub recipient_address: Fr,
+    pub relayer_address: Fr,
 }
 
 
@@ -23,6 +24,7 @@ impl PublicInputs {
             self.merkle_root,
             self.nullifier_hash,
             self.recipient_address,
+            self.relayer_address,
         ]
     }
 }
@@ -73,7 +75,8 @@ pub struct ProofInputs {
     pub root: Fr,
     pub merkle_siblings: Vec<Fr>,
     pub merkle_siblings_side: Vec<bool>,
-    pub recepient_address: Fr
+    pub recepient_address: Fr,
+    pub relayer_address: Fr
 }
 
 

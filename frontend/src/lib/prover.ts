@@ -19,28 +19,31 @@ export async function generateNote(): Promise<Note> {
 
 export type ProofResult = {
     proof: string;
-    publicInputs: { 
-        root: string; 
-        nullifier_hash: string; 
-        recipient_address: string 
+    publicInputs: {
+        root: string;
+        nullifier_hash: string;
+        recipient_address: string;
+        relayer_address: string;
     };
 };
 
 export async function generateProof(
-    note: { 
-        secret: string; 
-        nullifier: string 
+    note: {
+        secret: string;
+        nullifier: string
     },
     leaves: string[],
-    recipient: string
+    recipient: string,
+    relayer: string
 ): Promise<ProofResult> {
     await ensureReady();
     return JSON.parse(
         prove(
-            note.secret, 
-            note.nullifier, 
-            JSON.stringify(leaves), 
-            recipient
+            note.secret,
+            note.nullifier,
+            JSON.stringify(leaves),
+            recipient,
+            relayer
         )
     );
 }

@@ -17,12 +17,14 @@ pub fn prove(
     nullifier_hex: &str,
     leaves_json: &str, // JSON array of every commitment (hex), in insertion order
     recipient: &str,
+    relayer: &str,
 ) -> Result<JsValue, JsValue> {
     let secret_note = types::SecretNote {
         secret: types::hex_to_fr(secret_hex),
         nullifier: types::hex_to_fr(nullifier_hex),
     };
     let recipient_address = types::hex_to_fr(recipient);
+    let relayer_address = types::hex_to_fr(relayer);
 
     // rebuild the tree from the deposit commitments
     let leaf_hexes: Vec<String> = serde_json::from_str(leaves_json)
@@ -51,6 +53,7 @@ pub fn prove(
             .map(|(_, side)| *side == Side::Right)
             .collect(),
         recepient_address: recipient_address,
+        relayer_address,
     };
 
     let pk = keys::load_proving_key();
@@ -62,7 +65,8 @@ pub fn prove(
         "publicInputs": {
             "root": format!("0x{}", hex::encode(types::fq_to_be_bytes(public_inputs.merkle_root))),
             "nullifier_hash": format!("0x{}", hex::encode(types::fq_to_be_bytes(public_inputs.nullifier_hash))),
-            "recipient_address": format!("0x{}", hex::encode(types::fq_to_be_bytes(public_inputs.recipient_address)))
+            "recipient_address": format!("0x{}", hex::encode(types::fq_to_be_bytes(public_inputs.recipient_address))),
+            "relayer_address": format!("0x{}", hex::encode(types::fq_to_be_bytes(public_inputs.relayer_address)))
         },
     });
     Ok(JsValue::from_str(&json.to_string()))
@@ -124,6 +128,7 @@ mod tests {
                 .collect(),
             root: tree.root(),
             recepient_address: Fr::from(0xabc123),
+            relayer_address: Fr::from(0xdef456),
             secret_note: note,
         };
 
