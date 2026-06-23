@@ -20,6 +20,9 @@ export const MIXER_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 export const DEPLOY_BLOCK = import.meta.env.VITE_DEPLOY_BLOCK;
 
+export const RELAYER_ADDRESS = import.meta.env.VITE_RELAYER_ADDRESS;
+export const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
+
 export const mixerAbi = parseAbi([
     "function deposit(bytes32 commitment) payable",
     "function withdraw(bytes calldata proof, bytes32 root, bytes32 nullifierHash, address recipient)",

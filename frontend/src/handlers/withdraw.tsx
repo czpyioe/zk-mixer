@@ -1,6 +1,6 @@
 import { encodeEventTopics, parseAbiItem, type Hash } from "viem";
 import { generateProof, type Note } from "../lib/prover";
-import { walletClient, publicClient, mixerAbi, MIXER_ADDRESS, DEPLOY_BLOCK } from "../lib/chains";
+import { MIXER_ADDRESS, DEPLOY_BLOCK, RELAYER_ADDRESS, RELAYER_URL } from "../lib/chains";
 
 const depositEvent = parseAbiItem(
     "event Deposit(bytes32 indexed commitment, uint32 leafIndex, uint256 timestamp)",
@@ -54,29 +54,35 @@ async function fetchCommitments(): Promise<string[]> {
 }
 
 export async function withdraw(recipient: `0x${string}`): Promise<Hash> {
+    if (!RELAYER_ADDRESS || !RELAYER_URL) {
+        throw new Error(
+            "Relayer not configured: set VITE_RELAYER_ADDRESS and VITE_RELAYER_URL, then restart the dev server (or rebuild the frontend).",
+        );
+    }
+
     const raw = localStorage.getItem("note");
     if (!raw) throw new Error("No saved note found — make a deposit first.");
     const note: Note = JSON.parse(raw);
 
     const leaves = await fetchCommitments();
-    const [account] = await walletClient.requestAddresses();
 
-    const { proof, publicInputs } = await generateProof(note, leaves, recipient, account);
+    const { proof, publicInputs } = await generateProof(note, leaves, recipient, RELAYER_ADDRESS);
 
-    const { request } = await publicClient.simulateContract({
-        account,
-        address: MIXER_ADDRESS,
-        abi: mixerAbi,
-        functionName: "withdraw",
-        args: [
-            proof as `0x${string}`,
-            publicInputs.root as `0x${string}`,
-            publicInputs.nullifier_hash as `0x${string}`,
+    const res = await fetch(`${RELAYER_URL}/relayer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            proof,
+            root: publicInputs.root,
+            nullifierHash: publicInputs.nullifier_hash,
             recipient,
-        ],
+        }),
     });
-    const hash = await walletClient.writeContract(request);
-    await publicClient.waitForTransactionReceipt({ hash });
 
-    return hash;
+    if (!res.ok) {
+        throw new Error(`Relayer error: ${await res.text()}`);
+    }
+
+    const { tx_hash } = await res.json();
+    return tx_hash as Hash;
 }
