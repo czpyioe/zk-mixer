@@ -59,11 +59,10 @@ export async function withdraw(recipient: `0x${string}`): Promise<Hash> {
     const note: Note = JSON.parse(raw);
 
     const leaves = await fetchCommitments();
-
-    
-    const { proof, publicInputs } = await generateProof(note, leaves, recipient);
-
     const [account] = await walletClient.requestAddresses();
+
+    const { proof, publicInputs } = await generateProof(note, leaves, recipient, account);
+
     const { request } = await publicClient.simulateContract({
         account,
         address: MIXER_ADDRESS,

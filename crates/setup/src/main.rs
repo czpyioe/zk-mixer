@@ -141,6 +141,7 @@ mod tests {
             merkle_root: Some(tree.root()),
             nullifier_hash: Some(nullifier_hash),
             recipient_address: Some(Fr::from(0xabc123)),
+            relayer_address: Some(Fr::from(0xdef456)),
         }
     }
 
@@ -158,9 +159,10 @@ mod tests {
         let root = witness.merkle_root.unwrap();
         let nullifier_hash = witness.nullifier_hash.unwrap();
         let recipient = witness.recipient_address.unwrap();
+        let relayer = witness.relayer_address.unwrap();
 
         let proof = Groth16::<Bn254>::prove(&pk, witness, &mut rng).unwrap();
-        let public_inputs = vec![root, nullifier_hash, recipient];
+        let public_inputs = vec![root, nullifier_hash, recipient, relayer];
 
         assert!(Groth16::<Bn254>::verify(&vk, &public_inputs, &proof).unwrap());
     }
@@ -173,22 +175,37 @@ mod tests {
         let witness = valid_witness(Fr::from(1), Fr::from(2));
         let proof = Groth16::<Bn254>::prove(&pk, witness, &mut rng).unwrap();
 
-        let fake_inputs = vec![Fr::from(999), Fr::from(888), Fr::from(777)];
+        let fake_inputs = vec![Fr::from(999), Fr::from(888), Fr::from(777), Fr::from(666)];
         assert!(!Groth16::<Bn254>::verify(&vk, &fake_inputs, &proof).unwrap());
     }
 
     #[test]
     fn test_verify_fails_wrong_witness() {
-        let (pk, _vk) = load_keys();
+        let (pk, vk) = load_keys();
 
         let mut witness = valid_witness(Fr::from(1), Fr::from(2));
         witness.secret = Some(Fr::from(3));
 
+        let root = witness.merkle_root.unwrap();
+        let nullifier_hash = witness.nullifier_hash.unwrap();
+        let recipient = witness.recipient_address.unwrap();
+        let relayer = witness.relayer_address.unwrap();
+        let public_inputs = vec![root, nullifier_hash, recipient, relayer];
+
         let result = std::panic::catch_unwind(|| {
-            Groth16::<Bn254>::prove(&pk, witness, &mut OsRng).unwrap()
+            Groth16::<Bn254>::prove(&pk, witness, &mut OsRng)
         });
 
-        assert!(result.is_err(), "prove() panicked while trying to create the false proof");
+        match result {
+            Err(_) => {}
+            Ok(proof) => {
+                let proof = proof.expect("prove returned Err");
+                assert!(
+                    !Groth16::<Bn254>::verify(&vk, &public_inputs, &proof).unwrap(),
+                    "a wrong witness must not produce a verifying proof"
+                );
+            }
+        }
     }
 }
 

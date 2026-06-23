@@ -22,12 +22,14 @@ fn main() {
     let sides: Vec<bool> = merkle_proof.siblings.iter().map(|(_, side)| *side == Side::Right).collect();
 
     let recipient_addr = Fr::from(0xdeadbeef_u64);
+    let relayer_addr = Fr::from(0xcafe_u64);
     let inputs = ProofInputs {
         secret_note: note,
         root,
         merkle_siblings: siblings,
         merkle_siblings_side: sides,
         recepient_address: recipient_addr,
+        relayer_address: relayer_addr,
     };
     let (proof, pub_inputs) = generate_proof(inputs, &pk).unwrap();
 
@@ -36,4 +38,5 @@ fn main() {
     println!("nullifierHash = 0x{}", hex::encode(fq_to_be_bytes(pub_inputs.nullifier_hash)));
     println!("commitment = 0x{}", hex::encode(fq_to_be_bytes(commitment)));
     println!("recipient = 0x{:040x}", 0xdeadbeef_u64);
+    println!("relayer = 0x{:040x}", 0xcafe_u64);
 }

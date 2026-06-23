@@ -18,9 +18,10 @@ pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Res
         nullifier: Some(inputs.secret_note.nullifier), 
         merkle_siblings: Some(inputs.merkle_siblings), 
         merkle_siblings_sides: Some(inputs.merkle_siblings_side), 
-        merkle_root: Some(inputs.root), 
-        nullifier_hash: Some(inputs.secret_note.nullifier_hash()), 
-        recipient_address: Some(inputs.recepient_address)
+        merkle_root: Some(inputs.root),
+        nullifier_hash: Some(inputs.secret_note.nullifier_hash()),
+        recipient_address: Some(inputs.recepient_address),
+        relayer_address: Some(inputs.relayer_address)
     };
 
     let proof = Groth16::<Bn254>::prove(pk, witness, &mut rng)?;
@@ -34,7 +35,8 @@ pub fn generate_proof(inputs: types::ProofInputs, pk: &ProvingKey<Bn254>) -> Res
     let public_inputs = types::PublicInputs{
         merkle_root: inputs.root,
         nullifier_hash: inputs.secret_note.nullifier_hash(),
-        recipient_address: inputs.recepient_address
+        recipient_address: inputs.recepient_address,
+        relayer_address: inputs.relayer_address
     };
 
     Ok((proof,public_inputs))

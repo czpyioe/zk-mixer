@@ -23,6 +23,7 @@ pub struct ZkMixer {
     pub merkle_root: Option<Fr>,
     pub nullifier_hash: Option<Fr>,
     pub recipient_address: Option<Fr>,
+    pub relayer_address: Option<Fr>,
 }
 
 
@@ -33,9 +34,10 @@ impl Default for ZkMixer {
             nullifier: Some(Fr::zero()), 
             merkle_siblings: Some(vec![Fr::zero(); TREE_DEPTH]), 
             merkle_siblings_sides: Some(vec![false; TREE_DEPTH]), 
-            merkle_root: Some(Fr::zero()), 
-            nullifier_hash: Some(Fr::zero()), 
-            recipient_address: Some(Fr::zero())
+            merkle_root: Some(Fr::zero()),
+            nullifier_hash: Some(Fr::zero()),
+            recipient_address: Some(Fr::zero()),
+            relayer_address: Some(Fr::zero())
         }
     }
 }
@@ -62,6 +64,7 @@ impl ConstraintSynthesizer<Fr> for ZkMixer {
         let merkle_root = FpVar::new_input(cs.clone(), || self.merkle_root.ok_or(SynthesisError::AssignmentMissing))?;
         let nullifier_hash = FpVar::new_input(cs.clone(), || self.nullifier_hash.ok_or(SynthesisError::AssignmentMissing))?;
         let _recipient_address = FpVar::new_input(cs.clone(), || self.recipient_address.ok_or(SynthesisError::AssignmentMissing))?;
+        let _relayer_address = FpVar::new_input(cs.clone(), || self.relayer_address.ok_or(SynthesisError::AssignmentMissing))?;
 
         // constraint 1: nullifier_hash == Poseidon(nullifier)
         let computed_nullifier_hash = poseidon::poseidon_gadget(cs.clone(), &[n.clone()])?;
@@ -100,6 +103,7 @@ mod tests {
             merkle_root: Some(tree.root()),
             nullifier_hash: Some(nullifier_hash),
             recipient_address: Some(Fr::from(0xabc123u64)),
+            relayer_address: Some(Fr::from(0xdef456u64)),
         }
     }
 
